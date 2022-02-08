@@ -1,25 +1,21 @@
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
+import DirectorySelect from './DirectorySelect';
+import DirectoryList from './DirectoryList';
 
 function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
-}
+
+  const [directory, setDirectory] = useState('');
+  const [directoryList, setDirectoryList] = useState([]);
+
+    return (
+      <div className="App">
+        <div>Working with Directory {directory}</div>
+        <DirectorySelect directory={directory} setDirectory={setDirectory} directoryList={directoryList} setDirectoryList={setDirectoryList} />
+        <DirectoryList directory={directory} setDirectory={setDirectory} directoryList={directoryList} setDirectoryList={setDirectoryList} />
+      </div>
+    );
+  }
+
 
 export default App;
