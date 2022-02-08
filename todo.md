@@ -2,7 +2,7 @@
 
 *In order of importance*
 
--  Parse comma separated tags in the add tag dialog
+-  Way more server side error handling for paths. Also Santize I think
 -  Remove all of a specific tag without doing it on each file that has it
 -  Search for files that contain tag, AND, OR, NOT tags only
 -  Handle delta put requests instead of re-writing the entire file
