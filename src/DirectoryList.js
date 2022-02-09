@@ -89,21 +89,58 @@ function DirectoryList() {
     setDirty(true);
   };
 
-
-  let content;
-  if (searchQuery) {
+  let contentData;
+  if (Object.keys(directoryList).length === 0) {
+    contentData = [];
+  } else if (searchQuery) {
     let search = searchFilter(directoryList, searchQuery);
-    console.log(search);
+    contentData = search;
+  } else if (directoriesFirst) {
+    let dirs = Object.keys(directoryList).filter(x => directoryList[x].kind === 'directory');
+    let files = Object.keys(directoryList).filter(x => directoryList[x].kind === 'file');
+    let itemKeys = dirs.concat(files);
+    contentData = itemKeys
+  } else {
+    contentData = Object.keys(directoryList)
+  }
 
-    content = (
+  return (
+    <div className="directory-list">
+      <div className="directory-select">
+        <div className="directory-select-header">
+          <h2>Select a directory</h2>
+        </div>
+        <div className="directory-select-body">
+          <input value={directoryInput} onChange={evt => setDirectoryInput(evt.target.value)} />
+          <button onClick={() => setDirectory(directoryInput)}>Load Content</button>
+
+        </div>
+      </div>
+      <div className="directory-list-header">
+        <h2>List of {directory} </h2>
+
+        <div className="directory-controls">
+          <button onClick={upDirectory}>Up Directory</button>
+          <br />
+          <input type="checkbox" checked={directoriesFirst} onChange={evt => setDirectoriesFirst(evt.target.checked)} />
+          <label htmlFor="directoriesFirst">List Directories First in Table</label>
+
+          <div className="directory-list-search"> Search: &nbsp;
+            <input value={searchQuery} onChange={evt => setSearchQuery(evt.target.value)} />
+            <div className="directory-list-search-footer">
+              You can search for tags separated by &amp; or |. Parentheses are not supported. &amp; has precedence over |.
+            </div>
+          </div>
+        </div>
+      </div>
       <div className="directory-list-body">
         <div className="directory-list-title">
           <h3 className='filename-title'>Filename</h3>
           <h3 className='tags-title'>Tags (click to delete)</h3>
         </div>
-        {search.map(item => (
-
-          <div className='directory-list-item' key={item}>
+        {
+          contentData.map(item => (
+            <div className='directory-list-item' key={item}>
             <div className='filename-column' key={`${item}-file`}>
               {
                 (directoryList[item].kind === 'directory') ? (
@@ -127,132 +164,12 @@ function DirectoryList() {
               <button onClick={(event) => addTag(item, event)}>Add Tag</button>
             </div>
           </div>
-        )
-        )}
-      </div>
-    );
-} else if (Object.keys(directoryList).length === 0) {
-  content = (
-    <div className="directory-list-body">
+          ))
+        }
 
-      <div className="directory-list-empty">
-        <h3>Directory not found</h3>
       </div>
     </div>
   );
-} else if (directoriesFirst) {
-  let dirs = Object.keys(directoryList).filter(x => directoryList[x].kind === 'directory');
-  let files = Object.keys(directoryList).filter(x => directoryList[x].kind === 'file');
-  let itemKeys = dirs.concat(files);
-  content = (
-    <div className="directory-list-body">
-      <div className="directory-list-title">
-        <h3 className='filename-title'>Filename</h3>
-        <h3 className='tags-title'>Tags (click to delete)</h3>
-      </div>
-      {
-
-        itemKeys.map(item => (
-          <div className='directory-list-item' key={item}>
-            <div className='filename-column' key={`${item}-file`}>
-              {
-                (directoryList[item].kind === 'directory') ? (
-                  <button onClick={() => {
-                    setDirectory(`${directory}/${item}`);
-                    setSearchQuery('');
-                    // reloadData(`${directory}/${item}`);
-                  }
-                  }>Open</button>
-                ) : (null)
-              }
-
-              <div className={`filename-column-item ${directoryList[item].kind === 'directory' ? 'directory' : ''}`}>{item}</div>
-
-            </div>
-            <div className='tags-column' key={`${item}-tags`}>
-              {directoryList[item].tags.map(tag => (
-                <button onClick={(event) => removeTag(item, tag)} key={`${item}-tag-${tag}`}>{tag}</button>
-              ))}
-            </div>
-            <div>
-              <button onClick={(event) => addTag(item, event)}>Add Tag</button>
-            </div>
-          </div>
-        ))
-      }
-    </div>
-  );
-} else {
-  content = (
-    <div className="directory-list-body">
-      <div className="directory-list-title">
-        <h3 className='filename-title'>Filename</h3>
-        <h3 className='tags-title'>Tags (click to delete)</h3>
-      </div>
-      {
-        Object.keys(directoryList).map(item => (
-          <div className='directory-list-item' key={item}>
-            <div className='filename-column' key={`${item}-file`}>
-              {
-                (directoryList[item].kind === 'directory') ? (
-                  <button onClick={() => {
-                    setDirectory(`${directory}/${item}`);
-                    // reloadData(`${directory}/${item}`);
-                  }
-                  }>Open</button>
-                ) : (null)
-              }
-
-              <div className={`filename-column-item ${directoryList[item].kind === 'directory' ? 'directory' : ''}`}>{item}</div>
-
-            </div>
-            <div className='tags-column' key={`${item}-tags`}>
-              {directoryList[item].tags.map(tag => (
-                <button onClick={(event) => removeTag(item, tag)} key={`${item}-tag-${tag}`}>{tag}</button>
-              ))}
-            </div>
-            <div>
-              <button onClick={(event) => addTag(item, event)}>Add Tag</button>
-            </div>
-          </div>
-        ))
-      }
-    </div>
-  );
-}
-
-return (
-  <div className="directory-list">
-    <div className="directory-select">
-      <div className="directory-select-header">
-        <h2>Select a directory</h2>
-      </div>
-      <div className="directory-select-body">
-      <input value={directoryInput} onChange={evt => setDirectoryInput(evt.target.value)} />
-      <button onClick={() => setDirectory(directoryInput)}>Load Content</button>
-
-      </div>
-    </div>
-    <div className="directory-list-header">
-      <h2>List of {directory} </h2>
-
-      <div className="directory-controls">
-        <button onClick={upDirectory}>Up Directory</button>
-        <br />
-        <input type="checkbox" checked={directoriesFirst} onChange={evt => setDirectoriesFirst(evt.target.checked)} />
-        <label htmlFor="directoriesFirst">List Directories First in Table</label>
-
-        <div className="directory-list-search"> Search: &nbsp;
-        <input value={searchQuery} onChange={evt => setSearchQuery(evt.target.value)} />
-        <div className="directory-list-search-footer">
-          You can search for tags separated by &amp; or |. Parentheses are not supported. &amp; has precedence over |.
-        </div>
-      </div>
-      </div>
-    </div>
-    {content}
-  </div>
-);
 }
 
 

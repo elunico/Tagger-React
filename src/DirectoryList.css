@@ -62,7 +62,7 @@
 
 .tags-column {
   display: grid;
-  grid-template-columns: repeat(auto-fit, 120px);
+  grid-template-columns: repeat(auto-fit, minmax(max-content, 100px));
   grid-template-rows: repeat(auto-fit, min-content);
 }
 
