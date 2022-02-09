@@ -1,19 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import './DirectoryList.css';
+import SearchComponent from './SearchComponent';
 
 function getTags() {
   let tags = prompt("Enter the new tag. Comma separated for multiple tags.", '');
   return tags.split(',').map(x => x.trim());
-}
-
-function searchFilter(directoryList, query) {
-  const intersections = query.split('&').map(x => x.trim().toLowerCase());
-  const unions = query.split('|').map(x => x.trim().toLowerCase());
-  return Object.keys(directoryList)
-    // directory items that match the query in the filename
-    .filter(x => unions.some(condition => x.toLowerCase().includes(condition)) || (intersections.every(condition => x.toLowerCase().includes(condition)) ||
-      // directory items whose tags match the query
-      (directoryList[x].tags.filter(tag => unions.some(condition => tag.toLowerCase().includes(condition)) || intersections.every(condition => tag.toLowerCase().includes(condition))).length > 0)));
 }
 
 
@@ -22,17 +13,16 @@ function DirectoryList() {
 
   const [directoryInput, setDirectoryInput] = useState('');
   const [directory, setDirectory] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [directoryList, setDirectoryList] = useState({});
   const [dirty, setDirty] = useState(false);
   const [directoriesFirst, setDirectoriesFirst] = useState(false);
+  const [displayKeys, setDisplayKeys] = useState([]);
 
   function upDirectory() {
     let components = directory.split('/');
     components.pop();
     let newDirectory = components.join('/');
     setDirectory(newDirectory);
-    setSearchQuery('');
   }
 
   useEffect(() => {
@@ -89,20 +79,18 @@ function DirectoryList() {
     setDirty(true);
   };
 
-  let contentData;
+  useEffect(() => {
   if (Object.keys(directoryList).length === 0) {
-    contentData = [];
-  } else if (searchQuery) {
-    let search = searchFilter(directoryList, searchQuery);
-    contentData = search;
+    setDisplayKeys([]);
   } else if (directoriesFirst) {
     let dirs = Object.keys(directoryList).filter(x => directoryList[x].kind === 'directory');
     let files = Object.keys(directoryList).filter(x => directoryList[x].kind === 'file');
     let itemKeys = dirs.concat(files);
-    contentData = itemKeys
+    setDisplayKeys(itemKeys);
   } else {
-    contentData = Object.keys(directoryList)
+    setDisplayKeys(Object.keys(directoryList));
   }
+}, [directoryList, directoriesFirst]);
 
   return (
     <div className="directory-list">
@@ -125,12 +113,9 @@ function DirectoryList() {
           <input type="checkbox" checked={directoriesFirst} onChange={evt => setDirectoriesFirst(evt.target.checked)} />
           <label htmlFor="directoriesFirst">List Directories First in Table</label>
 
-          <div className="directory-list-search"> Search: &nbsp;
-            <input value={searchQuery} onChange={evt => setSearchQuery(evt.target.value)} />
-            <div className="directory-list-search-footer">
-              You can search for tags separated by &amp; or |. Parentheses are not supported. &amp; has precedence over |.
-            </div>
-          </div>
+          <h3 className="directory-list-search"> Search: &nbsp;
+          </h3>
+          <SearchComponent directory={directory} directoryList={directoryList} displayKeys={displayKeys} setDisplayKeys={setDisplayKeys} />
         </div>
       </div>
       <div className="directory-list-body">
@@ -139,14 +124,13 @@ function DirectoryList() {
           <h3 className='tags-title'>Tags (click to delete)</h3>
         </div>
         {
-          contentData.map(item => (
+          displayKeys.map(item => (
             <div className='directory-list-item' key={item}>
             <div className='filename-column' key={`${item}-file`}>
               {
                 (directoryList[item].kind === 'directory') ? (
                   <button onClick={() => {
                     setDirectory(`${directory}/${item}`);
-                    setSearchQuery('');
                   }
                   }>Open</button>
                 ) : (null)
