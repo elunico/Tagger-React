@@ -36,6 +36,7 @@ async function recursiveSearch(directory, allConditions, anyConditions, avoidCon
   const data = getDirectoryData(directory);
   for (let filename of Object.keys(data)) {
     const entry = data[filename];
+    filename = filename.toLowerCase();
 
     // TODO: search dotfiles optionally but not by default or for now at least
     if (filename.startsWith('.')) {
@@ -45,9 +46,9 @@ async function recursiveSearch(directory, allConditions, anyConditions, avoidCon
       await recursiveSearch(`${directory}/${filename}`, allConditions, anyConditions, avoidConditions, results);
     } else {
       const tags = entry.tags;
-      const allMatch = allConditions.every(condition => tags.includes(condition) || filename.includes(condition));
-      const anyMatch = (anyConditions.length === 0) || (anyConditions.some(condition => tags.includes(condition) || filename.includes(condition)));
-      const avoidMatch = avoidConditions.some(condition => tags.includes(condition) || filename.includes(condition));
+      const allMatch = allConditions.every(condition => tags.includes(condition.toLowerCase()) || filename.includes(condition.toLowerCase()));
+      const anyMatch = (anyConditions.length === 0) || (anyConditions.some(condition => tags.includes(condition.toLowerCase()) || filename.includes(condition.toLowerCase())));
+      const avoidMatch = avoidConditions.some(condition => tags.includes(condition.toLowerCase()) || filename.includes(condition.toLowerCase()));
       if (allMatch && anyMatch && !avoidMatch) {
         results[`${directory}/${filename}`] = { tags: tags, kind: entry.kind };
       }

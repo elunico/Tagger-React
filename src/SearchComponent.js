@@ -59,33 +59,41 @@ function SearchComponent(props) {
     setQuery('');
     setAllConditions([]);
     setAnyConditions([]);
+    setAvoidConditions([]);
     setIsEditableTags(true);
-    setDirectory(directory);
     setDisplayKeys([]);
     setDirectoryList(oldData);
-    setDisplayKeys(Object.keys(directoryList));
   }
 
   function addAndCondition() {
-    let conditions = prompt("Enter the AND new condition (comma separated for multiple)", "").split(',').map(x => x.trim());
-    setAllConditions([...allConditions, ...conditions]);
+    let conditions = prompt("Enter the AND new condition (comma separated for multiple)", "")
+    if (conditions) {
+      conditions = conditions.split(',').map(x => x.trim().toLowerCase());
+      setAllConditions([...allConditions, ...conditions]);
+    }
   }
 
   function addOrCondition() {
-    let conditions = prompt("Enter the OR new condition (comma separated for multiple)", "").split(',').map(x => x.trim());
-    setAnyConditions([...anyConditions, ...conditions]);
+    let conditions = prompt("Enter the OR new condition (comma separated for multiple)", "")
+    if (conditions) {
+      conditions = conditions.split(',').map(x => x.trim().toLowerCase());
+      setAnyConditions([...anyConditions, ...conditions]);
+    }
   }
 
   function addAvoidCondition() {
-    let conditions = prompt("Enter the AVOID new condition (comma separated for multiple)", "").split(',').map(x => x.trim());
-    setAvoidConditions([...avoidConditions, ...conditions]);
+    let conditions = prompt("Enter the AVOID new condition (comma separated for multiple)", "")
+    if (conditions) {
+      conditions = conditions.split(',').map(x => x.trim().toLowerCase());
+      setAvoidConditions([...avoidConditions, ...conditions]);
+    }
   }
 
   function doRecursiveSearch() {
     // eslint-disable-next-line no-restricted-globals
     let c = confirm('This will take a long time. Are you sure you want to do this? You will not see an update until it is complete');
-    setPendingRecursiveSearch(true);
     if (c) {
+      setPendingRecursiveSearch(true);
       setDisplayKeys([]);
       fetch('/recursive-search', {
         method: 'POST',
@@ -100,9 +108,7 @@ function SearchComponent(props) {
           console.log(data);
           // TODO: hold old data for when search clears
           setOldData(directoryList);
-          // setDisplayKeys([]);
           setDirectoryList(data.results);
-          // setDisplayKeys(Object.keys(data.results));
           setPendingRecursiveSearch(false);
           setIsEditableTags(false);
         }).catch(err => {
@@ -135,7 +141,7 @@ function SearchComponent(props) {
     return (
       <div className="search-container">
         {toggle}
-        <input value={query} onChange={evt => setQuery(evt.target.value)} />
+        <input value={query} onChange={evt => setQuery(evt.target.value.toLowerCase())} />
       </div>
     );
   } else if (pendingRecursiveSearch) {
@@ -187,7 +193,7 @@ function SearchComponent(props) {
         <p></p>
         <button className="search-recurse-button"
 
-          onClick={doRecursiveSearch}>Recursive Search</button>
+          onClick={(e) => { doRecursiveSearch(); }}>Recursive Search</button>
 
 
 

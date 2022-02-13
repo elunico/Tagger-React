@@ -4,7 +4,7 @@ import SearchComponent from './SearchComponent';
 
 function getTags() {
   let tags = prompt("Enter the new tag. Comma separated for multiple tags.", '');
-  return tags.split(',').map(x => x.trim());
+  return tags.split(',').map(x => x.trim().toLowerCase());
 }
 
 
