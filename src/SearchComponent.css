@@ -1,18 +1,22 @@
-
-
 .search-container-header {
-display: grid;
+  display: grid;
 }
 
 .search-container-header-and {
   grid-column: 1;
-padding: 0.5rem;
+  padding: 0.5rem;
 
 }
 
 .search-container-header-or {
   grid-column: 2;
-padding: 0.5rem;
+  padding: 0.5rem;
+
+}
+
+.search-container-header-avoid {
+  grid-column: 3;
+  padding: 0.5rem;
 
 }
 
@@ -27,6 +31,36 @@ padding: 0.5rem;
 }
 
 .and-column-button {
+  grid-column: 2;
+  padding: 0.5rem;
+}
+
+.or-column-item {
+  display: grid;
+  grid-template-columns: 5fr 1fr;
+}
+
+.or-column-condition {
+  grid-column: 1;
+  padding: 0.5rem;
+}
+
+.or-column-button {
+  grid-column: 2;
+  padding: 0.5rem;
+}
+
+.avoid-column-item {
+  display: grid;
+  grid-template-columns: 5fr 1fr;
+}
+
+.avoid-column-condition {
+  grid-column: 1;
+  padding: 0.5rem;
+}
+
+.avoid-column-button {
   grid-column: 2;
   padding: 0.5rem;
 }

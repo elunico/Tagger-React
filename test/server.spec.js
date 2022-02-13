@@ -95,7 +95,7 @@ describe('server.js', () => {
       let dir = 'test-dir';
       let allConditions = ['a'];
 
-      const results = await recursiveSearch(dir, allConditions, []);
+      const results = await recursiveSearch(dir, allConditions, [], []);
       expect(results).to.deep.equal({
         'test-dir/file-a.txt': { kind: 'file', tags: [] },
       });
@@ -106,7 +106,7 @@ describe('server.js', () => {
       let dir = 'src';
       let allConditions = ['does-not-exist'];
 
-      const results = await recursiveSearch(dir, allConditions, []);
+      const results = await recursiveSearch(dir, allConditions, [], ['node_modules']);
       expect(results).to.deep.equal({});
       return Promise.resolve(results);
 
@@ -115,9 +115,31 @@ describe('server.js', () => {
       let dir = 'test-dir/empty';
       let allConditions = ['a'];
 
-      const results = await recursiveSearch(dir, allConditions, []);
+      const results = await recursiveSearch(dir, allConditions, [], []);
 
       expect(results).to.deep.equal({});
+
+      return Promise.resolve();
+    });
+    it ('should return results for app.js from Coding/', async function ()  {
+      // this.timeout(2000);
+      let dir = '../../Coding';
+      let allConditions = ['app.js'];
+
+      const result = await recursiveSearch(dir, allConditions, [], ['venv', 'node_modules']);
+      expect(result).to.be.not.empty
+
+
+      return Promise.resolve();
+    });
+    it ('should find all js files in project', async function ()  {
+      // this.timeout(2000);
+      let dir = '.';
+      let allConditions = ['.js'];
+
+      const result = await recursiveSearch(dir, allConditions, [], ['venv', 'node_modules']);
+      expect(result).to.be.not.empty
+
 
       return Promise.resolve();
     });

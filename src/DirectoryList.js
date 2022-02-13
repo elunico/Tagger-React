@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+ import React, { useEffect, useLayoutEffect, useState } from 'react';
 import './DirectoryList.css';
 import SearchComponent from './SearchComponent';
 
@@ -17,6 +17,7 @@ function DirectoryList() {
   const [dirty, setDirty] = useState(false);
   const [directoriesFirst, setDirectoriesFirst] = useState(false);
   const [displayKeys, setDisplayKeys] = useState([]);
+  const [isEditableTags, setIsEditableTags] = useState(true);
 
   function upDirectory() {
     let components = directory.split('/');
@@ -29,6 +30,7 @@ function DirectoryList() {
     let named = directory.replace(/\//g, '%2F');
     console.log('Dir to fetch' + named);
     if (directory) {
+      setDisplayKeys([]);
       fetch(`/directory/${named}`)
         .then(resp => resp.json())
         .then(data => {
@@ -60,6 +62,19 @@ function DirectoryList() {
     }
   });
 
+  useEffect(() => {
+    if (Object.keys(directoryList).length === 0) {
+      setDisplayKeys([]);
+    } else if (directoriesFirst) {
+      let dirs = Object.keys(directoryList).filter(x => directoryList[x].kind === 'directory');
+      let files = Object.keys(directoryList).filter(x => directoryList[x].kind === 'file');
+      let itemKeys = dirs.concat(files);
+      setDisplayKeys(itemKeys);
+    } else {
+      setDisplayKeys(Object.keys(directoryList));
+    }
+  }, [directoryList, directoriesFirst]);
+
 
   const removeTag = (item, tag) => {
     console.log(item, tag);
@@ -78,19 +93,6 @@ function DirectoryList() {
     setDirectoryList(newList);
     setDirty(true);
   };
-
-  useEffect(() => {
-  if (Object.keys(directoryList).length === 0) {
-    setDisplayKeys([]);
-  } else if (directoriesFirst) {
-    let dirs = Object.keys(directoryList).filter(x => directoryList[x].kind === 'directory');
-    let files = Object.keys(directoryList).filter(x => directoryList[x].kind === 'file');
-    let itemKeys = dirs.concat(files);
-    setDisplayKeys(itemKeys);
-  } else {
-    setDisplayKeys(Object.keys(directoryList));
-  }
-}, [directoryList, directoriesFirst]);
 
   return (
     <div className="directory-list">
@@ -115,7 +117,15 @@ function DirectoryList() {
 
           <h3 className="directory-list-search"> Search: &nbsp;
           </h3>
-          <SearchComponent directory={directory} directoryList={directoryList} displayKeys={displayKeys} setDisplayKeys={setDisplayKeys} />
+          <SearchComponent
+            isEditableTags={isEditableTags}
+            setIsEditableTags={setIsEditableTags}
+            directory={directory}
+            setDirectory={setDirectory}
+            directoryList={directoryList}
+            setDirectoryList={setDirectoryList}
+            displayKeys={displayKeys}
+            setDisplayKeys={setDisplayKeys} />
         </div>
       </div>
       <div className="directory-list-body">
@@ -126,28 +136,28 @@ function DirectoryList() {
         {
           displayKeys.map(item => (
             <div className='directory-list-item' key={item}>
-            <div className='filename-column' key={`${item}-file`}>
-              {
-                (directoryList[item].kind === 'directory') ? (
-                  <button onClick={() => {
-                    setDirectory(`${directory}/${item}`);
-                  }
-                  }>Open</button>
-                ) : (null)
-              }
+              <div className='filename-column' key={`${item}-file`}>
+                {
+                  (directoryList[item].kind === 'directory') ? (
+                    <button onClick={() => {
+                      setDirectory(`${directory}/${item}`);
+                    }
+                    }>Open</button>
+                  ) : (null)
+                }
 
-              <div className={`filename-column-item ${directoryList[item].kind === 'directory' ? 'directory' : ''}`}>{item}</div>
+                <div className={`filename-column-item ${directoryList[item].kind === 'directory' ? 'directory' : ''}`}>{item}</div>
 
+              </div>
+              <div className='tags-column' key={`${item}-tags`}>
+                {directoryList[item].tags.map(tag => (
+                  isEditableTags && <button onClick={(event) => removeTag(item, tag)} key={`${item}-tag-${tag}`}>{tag}</button>
+                ))}
+              </div>
+              <div>
+                {isEditableTags && <button onClick={(event) => addTag(item, event)}>Add Tag</button>}
+              </div>
             </div>
-            <div className='tags-column' key={`${item}-tags`}>
-              {directoryList[item].tags.map(tag => (
-                <button onClick={(event) => removeTag(item, tag)} key={`${item}-tag-${tag}`}>{tag}</button>
-              ))}
-            </div>
-            <div>
-              <button onClick={(event) => addTag(item, event)}>Add Tag</button>
-            </div>
-          </div>
           ))
         }
 

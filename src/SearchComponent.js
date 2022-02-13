@@ -7,7 +7,7 @@ function searchFilter(directoryList, query) {
     .filter(x => x.toLowerCase().includes(query) || directoryList[x].tags.some(y => y.toLowerCase().includes(query)));
 }
 
-function complexSearchFilter(directoryList, allConditions, anyConditions) {
+function complexSearchFilter(directoryList, allConditions, anyConditions, avoidConditions) {
   console.log(directoryList);
   let results = [];
   for (let item in directoryList) {
@@ -25,7 +25,14 @@ function complexSearchFilter(directoryList, allConditions, anyConditions) {
         oneTrue = true;
       }
     }
-    if (matches && (oneTrue || anyConditions.length === 0)) {
+    let hasAvoid = false;
+    for (let condition of avoidConditions) {
+      if (item.toLowerCase().includes(condition.toLowerCase()) ||
+        directoryList[item].tags.some(tag => tag.toLowerCase().includes(condition.toLowerCase()))) {
+        hasAvoid = true;
+      }
+    }
+    if (matches && (oneTrue || anyConditions.length === 0) && !hasAvoid) {
       results.push(item);
     }
   }
@@ -34,7 +41,7 @@ function complexSearchFilter(directoryList, allConditions, anyConditions) {
 
 
 function SearchComponent(props) {
-  const { directory, directoryList, displayKeys, setDisplayKeys } = props;
+  const { isEditableTags, setIsEditableTags, directory, setDirectory, directoryList, setDirectoryList, displayKeys, setDisplayKeys } = props;
 
 
   const [query, setQuery] = useState('');
@@ -42,6 +49,22 @@ function SearchComponent(props) {
 
   const [allConditions, setAllConditions] = useState([]);
   const [anyConditions, setAnyConditions] = useState([]);
+  const [avoidConditions, setAvoidConditions] = useState([]);
+
+  const [pendingRecursiveSearch, setPendingRecursiveSearch] = useState(false);
+
+  const [oldData, setOldData] = useState(directoryList);
+
+  function clearSearch() {
+    setQuery('');
+    setAllConditions([]);
+    setAnyConditions([]);
+    setIsEditableTags(true);
+    setDirectory(directory);
+    setDisplayKeys([]);
+    setDirectoryList(oldData);
+    setDisplayKeys(Object.keys(directoryList));
+  }
 
   function addAndCondition() {
     let conditions = prompt("Enter the AND new condition (comma separated for multiple)", "").split(',').map(x => x.trim());
@@ -53,19 +76,39 @@ function SearchComponent(props) {
     setAnyConditions([...anyConditions, ...conditions]);
   }
 
+  function addAvoidCondition() {
+    let conditions = prompt("Enter the AVOID new condition (comma separated for multiple)", "").split(',').map(x => x.trim());
+    setAvoidConditions([...avoidConditions, ...conditions]);
+  }
+
   function doRecursiveSearch() {
     // eslint-disable-next-line no-restricted-globals
     let c = confirm('This will take a long time. Are you sure you want to do this? You will not see an update until it is complete');
+    setPendingRecursiveSearch(true);
     if (c) {
+      setDisplayKeys([]);
       fetch('/recursive-search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          directory, allConditions, anyConditions
+          directory, allConditions, anyConditions, avoidConditions
         })
-      });
+      }).then(res => res.json())
+        .then(data => {
+          console.log(data);
+          // TODO: hold old data for when search clears
+          setOldData(directoryList);
+          // setDisplayKeys([]);
+          setDirectoryList(data.results);
+          // setDisplayKeys(Object.keys(data.results));
+          setPendingRecursiveSearch(false);
+          setIsEditableTags(false);
+        }).catch(err => {
+          console.log(err);
+          setPendingRecursiveSearch(false);
+        });
     }
   }
   useEffect(() => {
@@ -76,9 +119,9 @@ function SearchComponent(props) {
 
   useEffect(() => {
     if (!isSimple) {
-      setDisplayKeys(complexSearchFilter(directoryList, allConditions, anyConditions));
+      setDisplayKeys(complexSearchFilter(directoryList, allConditions, anyConditions, avoidConditions));
     }
-  }, [allConditions, anyConditions, isSimple]);
+  }, [allConditions, anyConditions, avoidConditions, isSimple]);
 
 
   let toggle = (
@@ -95,8 +138,16 @@ function SearchComponent(props) {
         <input value={query} onChange={evt => setQuery(evt.target.value)} />
       </div>
     );
-  } else {
+  } else if (pendingRecursiveSearch) {
     return (
+      <div className="search-container">
+        <div className="searching-pending">Searching...</div>
+      </div>
+    );
+  }
+  else {
+    return (
+
       <div className="search-container">
         {toggle}
         <div className="search-container-header">
@@ -120,8 +171,19 @@ function SearchComponent(props) {
             ))}
             <button className="or-column" onClick={addOrCondition}>Add a OR condition</button>
           </div>
+          <div className="search-container-header-avoid">
+            <div className="avoid-column"> AVOID the following strings <br/>(files/dirs containing this will be skipped) </div>
+            {avoidConditions.map(condition => (
+              <div className="avoid-column-item" key={`avoid-${condition}`}>
+                <div className="avoid-column-condition" key={`$avoid-{condition}-item`}>{condition}</div>
+                <button className="avoid-remove-button" onClick={() => setAvoidConditions(avoidConditions.filter(x => x !== condition))}>X</button>
+              </div>
+            ))}
+            <button className="avoid-column" onClick={addAvoidCondition}>Add a AVOID condition</button>
+          </div>
         </div>
-        <button className="search-clear-button" onClick={() => { setQuery(''); setAllConditions([]); setAnyConditions([]); }}>Clear Search</button>
+        { !isEditableTags && <div className='search-container-item footer'>Clear search to enable editing tags</div>}
+        <button className="search-clear-button" onClick={() => { clearSearch(); }}>Clear Search</button>
         <p></p>
         <button className="search-recurse-button"
 
